@@ -7,6 +7,10 @@ import { format } from "date-fns";
 import { CalendarIcon, Trash2, Plus, UploadCloud } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { taskSchema, type TaskFormValues } from "@/lib/schemas";
+import { fetchUsers, fetchGroups, createTask } from "@/lib/api";
+import { User, Group } from "@/types";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -48,6 +52,12 @@ interface TaskFormProps {
 }
 
 export function TaskForm({ onClose, readOnly = false, defaultValues }: TaskFormProps) {
+  const router = useRouter();
+  const [users, setUsers] = useState<User[]>([]);
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [isLoadingGroups, setIsLoadingGroups] = useState(false);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskSchema),
     defaultValues: defaultValues || {
@@ -55,6 +65,7 @@ export function TaskForm({ onClose, readOnly = false, defaultValues }: TaskFormP
       subtasks: [],
       priority: "Orta",
       status: "Beklemede",
+      deadline: new Date(),
     },
   });
 
@@ -63,9 +74,55 @@ export function TaskForm({ onClose, readOnly = false, defaultValues }: TaskFormP
     name: "subtasks",
   });
 
-  function onSubmit(data: TaskFormValues) {
-    console.log(JSON.stringify(data, null, 2));
-    onClose?.();
+  useEffect(() => {
+    async function loadOptions() {
+      setIsLoadingUsers(true);
+      setIsLoadingGroups(true);
+      try {
+        const [u, g] = await Promise.all([fetchUsers(), fetchGroups()]);
+        setUsers(u);
+        setGroups(g);
+      } catch (err) {
+        console.error("Failed to load options");
+      } finally {
+        setIsLoadingUsers(false);
+        setIsLoadingGroups(false);
+      }
+    }
+    loadOptions();
+  }, []);
+
+  async function onSubmit(data: TaskFormValues) {
+    if (readOnly) {
+      onClose?.();
+      return;
+    }
+
+    try {
+      // Map to backend structure
+      const payload: any = {
+        title: data.title,
+        description: data.description,
+        type: data.type,
+        priority: data.priority,
+        status: data.status,
+        dueDate: data.deadline.toISOString().split("T")[0],
+      };
+
+      if (data.assignmentType === "user" && data.assignedUser) {
+        payload.assignedToUserId = parseInt(data.assignedUser, 10);
+      } else if (data.assignmentType === "group" && data.assignedGroup) {
+        payload.assignedToGroupId = parseInt(data.assignedGroup, 10);
+      }
+
+      await createTask(payload);
+      alert("Görev başarıyla oluşturuldu."); // Using standard browser alert instead of toast for safety if it's not setup.
+      router.refresh();
+      onClose?.();
+    } catch (err) {
+      console.error(err);
+      alert("Görev oluşturulurken bir hata oluştu.");
+    }
   }
 
   const assignmentType = form.watch("assignmentType");
@@ -269,10 +326,21 @@ export function TaskForm({ onClose, readOnly = false, defaultValues }: TaskFormP
                 name="assignedUser"
                 render={({ field }) => (
                     <FormItem>
-                    <FormLabel>Kullanıcı Adı</FormLabel>
-                    <FormControl>
-                        <Input placeholder="Kullanıcı adı girin..." {...field} readOnly={readOnly} />
-                    </FormControl>
+                    <FormLabel>Kullanıcı Seçin</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value} disabled={readOnly || isLoadingUsers}>
+                        <FormControl>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Kullanıcı seçin" />
+                        </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                            {users.map((u) => (
+                                <SelectItem key={u.id} value={u.id.toString()}>
+                                    {u.fullName} ({u.role})
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                     <FormMessage />
                     </FormItem>
                 )}
@@ -284,15 +352,18 @@ export function TaskForm({ onClose, readOnly = false, defaultValues }: TaskFormP
                 render={({ field }) => (
                     <FormItem>
                     <FormLabel>Grup</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value} disabled={readOnly}>
+                    <Select onValueChange={field.onChange} defaultValue={field.value} disabled={readOnly || isLoadingGroups}>
                         <FormControl>
                         <SelectTrigger>
                             <SelectValue placeholder="Grup seçin" />
                         </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                        <SelectItem value="Uyum">Uyum</SelectItem>
-                        <SelectItem value="KVKK">KVKK</SelectItem>
+                            {groups.map((g) => (
+                                <SelectItem key={g.id} value={g.id.toString()}>
+                                    {g.name}
+                                </SelectItem>
+                            ))}
                         </SelectContent>
                     </Select>
                     <FormMessage />
