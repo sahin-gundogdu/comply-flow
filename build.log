@@ -1,0 +1,22 @@
+
+> comply-flow-app@0.1.0 build
+> next build
+
+▲ Next.js 16.1.6 (Turbopack)
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 11.1s
+  Running TypeScript ...
+Failed to compile.
+
+./components/tasks/TaskForm.tsx:36:26
+Type error: Cannot find module '@/components/ui/textarea' or its corresponding type declarations.
+
+[0m [90m 34 |[39m   [33mPopoverTrigger[39m[33m,[39m
+ [90m 35 |[39m } [36mfrom[39m [32m"@/components/ui/popover"[39m[33m;[39m
+[31m[1m>[22m[39m[90m 36 |[39m [36mimport[39m { [33mTextarea[39m } [36mfrom[39m [32m"@/components/ui/textarea"[39m[33m;[39m [90m// Assuming Textarea is available or use Input[39m
+ [90m    |[39m                          [31m[1m^[22m[39m
+ [90m 37 |[39m [36mimport[39m { [33mSeparator[39m } [36mfrom[39m [32m"@/components/ui/separator"[39m[33m;[39m
+ [90m 38 |[39m
+ [90m 39 |[39m [90m// Temporary mock for Textarea if not installed, but usually Input component handles text[39m[0m
+Next.js build worker exited with code: 1 and signal: null

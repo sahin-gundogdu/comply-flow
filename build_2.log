@@ -1,0 +1,22 @@
+
+> comply-flow-app@0.1.0 build
+> next build
+
+▲ Next.js 16.1.6 (Turbopack)
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 9.4s
+  Running TypeScript ...
+Failed to compile.
+
+./lib/schemas.ts:12:5
+Type error: Object literal may only specify known properties, and 'required_error' does not exist in type '{ error?: string | $ZodErrorMap<$ZodIssueInvalidType<unknown>> | undefined; message?: string | undefined; }'.
+
+[0m [90m 10 |[39m   status[33m:[39m z[33m.[39m[36menum[39m([[32m"Pending"[39m[33m,[39m [32m"In Progress"[39m[33m,[39m [32m"Completed"[39m[33m,[39m [32m"Overdue"[39m])[33m,[39m
+ [90m 11 |[39m   deadline[33m:[39m z[33m.[39mdate({
+[31m[1m>[22m[39m[90m 12 |[39m     required_error[33m:[39m [32m"A deadline is required."[39m[33m,[39m
+ [90m    |[39m     [31m[1m^[22m[39m
+ [90m 13 |[39m   })[33m,[39m
+ [90m 14 |[39m   completionDate[33m:[39m z[33m.[39mdate()[33m.[39moptional()[33m,[39m
+ [90m 15 |[39m   assignmentType[33m:[39m z[33m.[39m[36menum[39m([[32m"user"[39m[33m,[39m [32m"group"[39m])[33m,[39m[0m
+Next.js build worker exited with code: 1 and signal: null
