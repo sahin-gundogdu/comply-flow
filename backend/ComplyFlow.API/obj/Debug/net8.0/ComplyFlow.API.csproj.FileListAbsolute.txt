@@ -1,8 +1,0 @@
-D:\comply-flow-app\backend\ComplyFlow.API\obj\Debug\net8.0\ComplyFlow.API.csproj.AssemblyReference.cache
-D:\comply-flow-app\backend\ComplyFlow.API\obj\Debug\net8.0\rpswa.dswa.cache.json
-D:\comply-flow-app\backend\ComplyFlow.API\obj\Debug\net8.0\ComplyFlow.API.GeneratedMSBuildEditorConfig.editorconfig
-D:\comply-flow-app\backend\ComplyFlow.API\obj\Debug\net8.0\ComplyFlow.API.AssemblyInfoInputs.cache
-D:\comply-flow-app\backend\ComplyFlow.API\obj\Debug\net8.0\ComplyFlow.API.AssemblyInfo.cs
-D:\comply-flow-app\backend\ComplyFlow.API\obj\Debug\net8.0\ComplyFlow.API.csproj.CoreCompileInputs.cache
-D:\comply-flow-app\backend\ComplyFlow.API\obj\Debug\net8.0\ComplyFlow.API.MvcApplicationPartsAssemblyInfo.cs
-D:\comply-flow-app\backend\ComplyFlow.API\obj\Debug\net8.0\ComplyFlow.API.MvcApplicationPartsAssemblyInfo.cache

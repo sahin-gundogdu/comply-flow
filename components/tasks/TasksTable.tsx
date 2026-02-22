@@ -51,73 +51,13 @@ import {
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { TaskForm } from "./TaskForm";
 import { TaskCreationDialog } from "./TaskCreationDialog";
+import { Task } from "@/types";
 
-// Mock Data
-const data: Task[] = [
-  {
-    id: "TASK-1024",
-    title: "3. Çeyrek tedarikçi sözleşmesi incelemesi",
-    type: "Sözleşme",
-    priority: "Yüksek",
-    status: "İşlemde",
-    assignee: "Alice Smith",
-    deadline: "2024-03-15",
-    group: "Uyum",
-  },
-  {
-    id: "TASK-1025",
-    title: "KVKK uyumluluk politikası güncellemesi",
-    type: "KVKK",
-    priority: "Orta",
-    status: "Beklemede",
-    assignee: "Hukuk Ekibi",
-    deadline: "2024-03-20",
-    group: "KVKK",
-  },
-  {
-    id: "TASK-1026",
-    title: "Çalışan el kitabı revizyonu",
-    type: "Personel",
-    priority: "Düşük",
-    status: "Tamamlandı",
-    assignee: "Bob Jones",
-    deadline: "2024-02-28",
-    group: "İnsan Kaynakları",
-  },
-  {
-    id: "TASK-1027",
-    title: "İç erişim kontrolleri denetimi",
-    type: "Proje",
-    priority: "Kritik",
-    status: "Gecikmiş",
-    assignee: "Güvenlik Grubu",
-    deadline: "2024-03-01",
-    group: "Uyum",
-  },
-  {
-    id: "TASK-1028",
-    title: "Yeni ortaklık için NDA taslağı",
-    type: "Sözleşme",
-    priority: "Orta",
-    status: "İşlemde",
-    assignee: "Alice Smith",
-    deadline: "2024-03-18",
-    group: "Hukuk",
-  },
-];
+interface TasksTableProps {
+  data: Task[];
+}
 
-export type Task = {
-  id: string;
-  title: string;
-  type: "Proje" | "Sözleşme" | "Personel" | "KVKK" | "Diğer";
-  priority: "Düşük" | "Orta" | "Yüksek" | "Kritik";
-  status: "Beklemede" | "İşlemde" | "Tamamlandı" | "Gecikmiş";
-  assignee: string;
-  deadline: string;
-  group: string;
-};
-
-export function TasksTable() {
+export function TasksTable({ data }: TasksTableProps) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -188,7 +128,7 @@ export function TasksTable() {
             <Badge variant={
                 status === "Tamamlandı" ? "default" :
                 status === "Gecikmiş" ? "destructive" :
-                status === "İşlemde" ? "secondary" : "outline"
+                status === "İşlemde" || status === "Devam Ediyor" ? "secondary" : "outline"
             }>
                 {status}
             </Badge>
@@ -196,14 +136,22 @@ export function TasksTable() {
       }
     },
     {
-      accessorKey: "assignee",
+      id: "assignee",
       header: "Atanan",
-      cell: ({ row }) => <div>{row.getValue("assignee")}</div>,
+      cell: ({ row }) => {
+        const task = row.original;
+        const assigneeName = task.assignedToUser?.fullName || task.assignedToGroup?.name || "Atanmadı";
+        return <div>{assigneeName}</div>;
+      },
     },
     {
-      accessorKey: "deadline",
+      accessorKey: "dueDate",
       header: "Son Tarih",
-      cell: ({ row }) => <div>{row.getValue("deadline")}</div>,
+      cell: ({ row }) => {
+        const dueDateStr = row.getValue("dueDate") as string;
+        const formattedDate = dueDateStr ? new Date(dueDateStr).toLocaleDateString() : "-";
+        return <div>{formattedDate}</div>;
+      },
     },
     {
       id: "actions",
@@ -222,7 +170,7 @@ export function TasksTable() {
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Eylemler</DropdownMenuLabel>
               <DropdownMenuItem
-                onClick={() => navigator.clipboard.writeText(task.id)}
+                onClick={() => navigator.clipboard.writeText(task.id.toString())}
               >
                 ID Kopyala
               </DropdownMenuItem>
@@ -403,13 +351,13 @@ export function TasksTable() {
                         onClose={() => setIsSheetOpen(false)}
                         defaultValues={{
                             title: selectedTask.title,
-                            description: "Bu mock veri olduğu için detaylı açıklama bulunmamaktadır.",
-                            type: selectedTask.type,
-                            priority: selectedTask.priority,
-                            status: selectedTask.status,
-                            deadline: new Date(selectedTask.deadline),
-                            assignmentType: "user", // Mock assumption
-                            assignedUser: selectedTask.assignee,
+                            description: selectedTask.description || "Bu görev için detaylı açıklama bulunmamaktadır.",
+                            type: "Diğer",
+                            priority: selectedTask.priority as any,
+                            status: selectedTask.status as any,
+                            deadline: selectedTask.dueDate ? new Date(selectedTask.dueDate) : new Date(),
+                            assignmentType: selectedTask.assignedToGroupId ? "group" : "user",
+                            assignedUser: selectedTask.assignedToUser?.fullName || selectedTask.assignedToGroup?.name || "",
                             subtasks: []
                         }}
                     />
