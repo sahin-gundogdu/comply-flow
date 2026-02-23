@@ -60,3 +60,38 @@ export async function createTask(data: any): Promise<Task> {
 
     return await response.json();
 }
+
+export async function updateTask(id: number, data: any): Promise<Task> {
+    const response = await fetch(`${BASE_URL}/Tasks/${id}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id, ...data }), // Some APIs require ID in body for PUT
+    });
+
+    if (!response.ok) {
+        throw new Error(`Failed to update task: ${response.statusText}`);
+    }
+
+    // Handle 204 No Content which is common for PUT
+    if (response.status === 204) {
+        return data as Task;
+    }
+
+    try {
+        return await response.json();
+    } catch {
+        return data as Task;
+    }
+}
+
+export async function deleteTask(id: number): Promise<void> {
+    const response = await fetch(`${BASE_URL}/Tasks/${id}`, {
+        method: "DELETE",
+    });
+
+    if (!response.ok) {
+        throw new Error(`Failed to delete task: ${response.statusText}`);
+    }
+}

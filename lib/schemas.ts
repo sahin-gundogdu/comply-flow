@@ -12,7 +12,7 @@ export const taskSchema = z.object({
   completionDate: z.date().optional(),
   assignmentType: z.enum(["user", "group"]),
   assignedUser: z.string().optional(),
-  assignedGroup: z.enum(["Uyum", "KVKK"]).optional(),
+  assignedGroup: z.string().optional(),
   subtasks: z
     .array(
       z.object({

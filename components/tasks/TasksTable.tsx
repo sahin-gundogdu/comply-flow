@@ -52,12 +52,29 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "
 import { TaskForm } from "./TaskForm";
 import { TaskCreationDialog } from "./TaskCreationDialog";
 import { Task } from "@/types";
+import { useRouter } from "next/navigation";
+import { deleteTask } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface TasksTableProps {
   data: Task[];
 }
 
 export function TasksTable({ data }: TasksTableProps) {
+  const router = useRouter();
+  const { toast } = useToast();
+
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -69,6 +86,35 @@ export function TasksTable({ data }: TasksTableProps) {
   // Sheet state for viewing details
   const [selectedTask, setSelectedTask] = React.useState<Task | null>(null);
   const [isSheetOpen, setIsSheetOpen] = React.useState(false);
+
+  const [taskToDelete, setTaskToDelete] = React.useState<Task | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
+  
+  const [taskToEdit, setTaskToEdit] = React.useState<Task | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
+
+  const handleDeleteConfirm = async () => {
+      if (taskToDelete) {
+          try {
+              await deleteTask(taskToDelete.id);
+              toast({
+                  title: "Silindi",
+                  description: "Görev başarıyla silindi.",
+              });
+              router.refresh();
+          } catch (error) {
+              console.error(error);
+              toast({
+                  variant: "destructive",
+                  title: "Hata",
+                  description: "Görev silinirken bir hata oluştu.",
+              });
+          } finally {
+              setIsDeleteDialogOpen(false);
+              setTaskToDelete(null);
+          }
+      }
+  };
 
   const columns: ColumnDef<Task>[] = [
     {
@@ -181,8 +227,14 @@ export function TasksTable({ data }: TasksTableProps) {
               }}>
                 <Eye className="mr-2 h-4 w-4"/> Detayları Gör
               </DropdownMenuItem>
-              <DropdownMenuItem>Düzenle</DropdownMenuItem>
-              <DropdownMenuItem className="text-destructive">Sil</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => {
+                  setTaskToEdit(task);
+                  setIsEditDialogOpen(true);
+              }}>Düzenle</DropdownMenuItem>
+              <DropdownMenuItem className="text-destructive" onClick={() => {
+                  setTaskToDelete(task);
+                  setIsDeleteDialogOpen(true);
+              }}>Sil</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         );
@@ -365,6 +417,59 @@ export function TasksTable({ data }: TasksTableProps) {
             </div>
         </SheetContent>
       </Sheet>
+
+      {/* Edit Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-[600px]">
+            <DialogHeader>
+                <DialogTitle>Görevi Düzenle</DialogTitle>
+                <DialogDescription>
+                    Mevcut görev bilgilerini güncelleyin.
+                </DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+                {taskToEdit && (
+                    <TaskForm 
+                        onClose={() => {
+                            setIsEditDialogOpen(false);
+                            setTaskToEdit(null);
+                        }}
+                        taskId={taskToEdit.id}
+                        defaultValues={{
+                            title: taskToEdit.title,
+                            description: taskToEdit.description || "",
+                            type: (taskToEdit.type as any) || "Proje",
+                            priority: (taskToEdit.priority as any) || "Orta",
+                            status: (taskToEdit.status as any) || "Beklemede",
+                            deadline: taskToEdit.dueDate ? new Date(taskToEdit.dueDate) : new Date(),
+                            assignmentType: taskToEdit.assignedToGroupId ? "group" : "user",
+                            assignedUser: taskToEdit.assignedToUser?.id?.toString() || "",
+                            assignedGroup: taskToEdit.assignedToGroup?.id?.toString() || "",
+                            subtasks: []
+                        }}
+                    />
+                )}
+            </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Alert */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Zorunlu Onay</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bu görevi silmek istediğinize emin misiniz? Bu işlem geri alınamaz.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>İptal</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Sil
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

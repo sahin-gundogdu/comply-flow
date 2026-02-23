@@ -13,6 +13,7 @@ export interface Task {
   id: number;
   title: string;
   description: string;
+  type: string;
   status: string;
   priority: string;
   dueDate: string;
