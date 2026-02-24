@@ -17,7 +17,9 @@ export const taskSchema = z.object({
     .array(
       z.object({
         title: z.string().min(1, "Alt görev başlığı gereklidir"),
-        assignee: z.string().optional(),
+        assignmentType: z.enum(["user", "group", "none"]).optional(),
+        assignedUser: z.string().optional(),
+        assignedGroup: z.string().optional(),
         deadline: z.date().optional(),
       })
     )

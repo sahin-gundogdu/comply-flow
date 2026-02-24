@@ -404,13 +404,19 @@ export function TasksTable({ data }: TasksTableProps) {
                         defaultValues={{
                             title: selectedTask.title,
                             description: selectedTask.description || "Bu görev için detaylı açıklama bulunmamaktadır.",
-                            type: "Diğer",
+                            type: (selectedTask.type as any) || "Diğer",
                             priority: selectedTask.priority as any,
                             status: selectedTask.status as any,
                             deadline: selectedTask.dueDate ? new Date(selectedTask.dueDate) : new Date(),
                             assignmentType: selectedTask.assignedToGroupId ? "group" : "user",
-                            assignedUser: selectedTask.assignedToUser?.fullName || selectedTask.assignedToGroup?.name || "",
-                            subtasks: []
+                            assignedUser: selectedTask.assignedToUserId?.toString() || "",
+                            assignedGroup: selectedTask.assignedToGroupId?.toString() || "",
+                            subtasks: (selectedTask.subTasks || []).map(st => ({
+                                title: st.title,
+                                assignmentType: st.assignedToUserId ? "user" : (st.assignedToGroupId ? "group" : "none"),
+                                assignedUser: st.assignedToUserId?.toString() || "",
+                                assignedGroup: st.assignedToGroupId?.toString() || ""
+                            }))
                         }}
                     />
                 )}
@@ -443,9 +449,14 @@ export function TasksTable({ data }: TasksTableProps) {
                             status: (taskToEdit.status as any) || "Beklemede",
                             deadline: taskToEdit.dueDate ? new Date(taskToEdit.dueDate) : new Date(),
                             assignmentType: taskToEdit.assignedToGroupId ? "group" : "user",
-                            assignedUser: taskToEdit.assignedToUser?.id?.toString() || "",
-                            assignedGroup: taskToEdit.assignedToGroup?.id?.toString() || "",
-                            subtasks: []
+                            assignedUser: taskToEdit.assignedToUserId?.toString() || "",
+                            assignedGroup: taskToEdit.assignedToGroupId?.toString() || "",
+                            subtasks: (taskToEdit.subTasks || []).map(st => ({
+                                title: st.title,
+                                assignmentType: st.assignedToUserId ? "user" : (st.assignedToGroupId ? "group" : "none"),
+                                assignedUser: st.assignedToUserId?.toString() || "",
+                                assignedGroup: st.assignedToGroupId?.toString() || ""
+                            }))
                         }}
                     />
                 )}

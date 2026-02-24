@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useFieldArray } from "react-hook-form";
 import { z } from "zod";
 import { format } from "date-fns";
-import { CalendarIcon, Trash2, Plus, UploadCloud } from "lucide-react";
+import { CalendarIcon, Trash2, Plus, UploadCloud, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { taskSchema, type TaskFormValues } from "@/lib/schemas";
 import { fetchUsers, fetchGroups, createTask, updateTask } from "@/lib/api";
@@ -78,6 +78,8 @@ export function TaskForm({
     },
   });
 
+  const { isSubmitting } = form.formState;
+
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: "subtasks",
@@ -122,6 +124,23 @@ export function TaskForm({
         payload.assignedToUserId = parseInt(data.assignedUser, 10);
       } else if (data.assignmentType === "group" && data.assignedGroup) {
         payload.assignedToGroupId = parseInt(data.assignedGroup, 10);
+      }
+
+      if (data.subtasks && data.subtasks.length > 0) {
+        payload.subTasks = data.subtasks.map((st) => {
+          const mappedSt: any = {
+            title: st.title,
+          };
+          if (st.assignmentType === "user" && st.assignedUser) {
+            mappedSt.assignedToUserId = parseInt(st.assignedUser, 10);
+          } else if (st.assignmentType === "group" && st.assignedGroup) {
+            mappedSt.assignedToGroupId = parseInt(st.assignedGroup, 10);
+          }
+          if (st.deadline) {
+            mappedSt.dueDate = st.deadline.toISOString().split("T")[0];
+          }
+          return mappedSt;
+        });
       }
 
       if (taskId) {
@@ -416,95 +435,175 @@ export function TaskForm({
                 type="button"
                 variant="ghost"
                 size="sm"
-                onClick={() => append({ title: "" })}
+                onClick={() => append({ title: "", assignmentType: "none" })}
               >
                 <Plus className="mr-2 h-4 w-4" /> Alt Görev Ekle
               </Button>
             )}
           </div>
-          {fields.map((field, index) => (
-            <div key={field.id} className="flex items-end gap-2">
-              <FormField
-                control={form.control}
-                name={`subtasks.${index}.title`}
-                render={({ field }) => (
-                  <FormItem className="flex-1">
-                    <FormControl>
-                      <Input
-                        placeholder="Alt görev başlığı"
-                        {...field}
-                        readOnly={readOnly}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name={`subtasks.${index}.assignee`}
-                render={({ field }) => (
-                  <FormItem className="w-1/3">
-                    <FormControl>
-                      <Input
-                        placeholder="Atanan"
-                        {...field}
-                        readOnly={readOnly}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name={`subtasks.${index}.deadline`}
-                render={({ field }) => (
-                  <FormItem className="w-1/3">
-                    <FormControl>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant={"outline"}
+          <div className="space-y-4">
+            {fields.map((field, index) => {
+              const currentAssignmentType = form.watch(`subtasks.${index}.assignmentType`);
+              return (
+                <div key={field.id} className="flex flex-col gap-2 p-3 border rounded-md relative bg-slate-50/50 dark:bg-slate-900/50">
+                  <div className="flex items-start gap-2">
+                    <FormField
+                      control={form.control}
+                      name={`subtasks.${index}.title`}
+                      render={({ field: inputField }) => (
+                        <FormItem className="flex-1">
+                          <FormControl>
+                            <Input
+                              placeholder="Alt görev başlığı"
+                              {...inputField}
+                              readOnly={readOnly}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name={`subtasks.${index}.assignmentType`}
+                      render={({ field: selectField }) => (
+                        <FormItem className="w-1/4">
+                          <Select
+                            onValueChange={selectField.onChange}
+                            defaultValue={selectField.value || "none"}
                             disabled={readOnly}
-                            className={cn(
-                              "w-full pl-3 text-left font-normal h-10",
-                              !field.value && "text-muted-foreground",
-                            )}
                           >
-                            {field.value ? (
-                              format(field.value, "PP")
-                            ) : (
-                              <span>Tarih</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            disabled={(date) => date < new Date("1900-01-01")}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              {!readOnly && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => remove(index)}
-                >
-                  <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
-                </Button>
-              )}
-            </div>
-          ))}
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Atama Türü" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="none">Atanmadı</SelectItem>
+                              <SelectItem value="user">Kullanıcı</SelectItem>
+                              <SelectItem value="group">Grup</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name={`subtasks.${index}.deadline`}
+                      render={({ field: dateField }) => (
+                        <FormItem className="w-1/4">
+                          <FormControl>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button
+                                  variant={"outline"}
+                                  disabled={readOnly}
+                                  className={cn(
+                                    "w-full pl-3 text-left font-normal h-10",
+                                    !dateField.value && "text-muted-foreground",
+                                  )}
+                                >
+                                  {dateField.value ? (
+                                    format(dateField.value, "PP")
+                                  ) : (
+                                    <span>Tarih</span>
+                                  )}
+                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar
+                                  mode="single"
+                                  selected={dateField.value}
+                                  onSelect={dateField.onChange}
+                                  disabled={(date) => date < new Date("1900-01-01")}
+                                  initialFocus
+                                />
+                              </PopoverContent>
+                            </Popover>
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+
+                    {!readOnly && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-10 w-10 shrink-0"
+                        onClick={() => remove(index)}
+                      >
+                        <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
+                      </Button>
+                    )}
+                  </div>
+
+                  {currentAssignmentType === "user" && (
+                    <FormField
+                      control={form.control}
+                      name={`subtasks.${index}.assignedUser`}
+                      render={({ field: userField }) => (
+                        <FormItem className="w-full">
+                          <Select
+                            onValueChange={userField.onChange}
+                            defaultValue={userField.value}
+                            disabled={readOnly || isLoadingUsers}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Kullanıcı seçin" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {users.map((u) => (
+                                <SelectItem key={u.id} value={u.id.toString()}>
+                                  {u.fullName} ({u.role})
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+
+                  {currentAssignmentType === "group" && (
+                    <FormField
+                      control={form.control}
+                      name={`subtasks.${index}.assignedGroup`}
+                      render={({ field: groupField }) => (
+                        <FormItem className="w-full">
+                          <Select
+                            onValueChange={groupField.onChange}
+                            defaultValue={groupField.value}
+                            disabled={readOnly || isLoadingGroups}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Grup seçin" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {groups.map((g) => (
+                                <SelectItem key={g.id} value={g.id.toString()}>
+                                  {g.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         <Separator />
@@ -533,7 +632,20 @@ export function TaskForm({
           <Button variant="outline" type="button" onClick={onClose}>
             {readOnly ? "Kapat" : "İptal"}
           </Button>
-            {!readOnly && <Button type="submit">{taskId ? "Değişiklikleri Kaydet" : "Görev Oluştur"}</Button>}
+          {!readOnly && (
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Kaydediliyor...
+                </>
+              ) : taskId ? (
+                "Değişiklikleri Kaydet"
+              ) : (
+                "Görev Oluştur"
+              )}
+            </Button>
+          )}
         </div>
       </form>
     </Form>
