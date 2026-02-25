@@ -13,6 +13,8 @@ export interface SubTask {
   id: number;
   taskId: number;
   title: string;
+  description?: string;
+  dueDate?: string | Date;
   isCompleted: boolean;
   assignedToUserId?: number;
   assignedToUser?: User;
@@ -24,6 +26,8 @@ export interface SubTask {
 
 export interface CreateSubTask {
   title: string;
+  description?: string;
+  dueDate?: string | Date;
   assignedToUserId?: number;
   assignedToGroupId?: number;
   assignedToUserName?: string;

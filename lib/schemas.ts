@@ -20,25 +20,38 @@ export const taskSchema = z.object({
         assignmentType: z.enum(["user", "group", "none"]).optional(),
         assignedUser: z.string().optional(),
         assignedGroup: z.string().optional(),
-        deadline: z.date().optional(),
+        dueDate: z.date().optional(),
+        description: z.string().optional(),
       })
     )
     .optional(),
   files: z.any().optional(), // File upload handling can be complex, using any for prototype
-}).refine(
-  (data) => {
-    if (data.assignmentType === "user" && !data.assignedUser) {
-      return false;
-    }
-    if (data.assignmentType === "group" && !data.assignedGroup) {
-      return false;
-    }
-    return true;
-  },
-  {
-    message: "Lütfen atanan kişiyi veya grubu belirtin.",
-    path: ["assignedUser"], // Error path
+}).superRefine((data, ctx) => {
+  if (data.assignmentType === "user" && !data.assignedUser) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Lütfen atanan kişiyi veya grubu belirtin.",
+      path: ["assignedUser"],
+    });
   }
-);
+  if (data.assignmentType === "group" && !data.assignedGroup) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Lütfen atanan kişiyi veya grubu belirtin.",
+      path: ["assignedGroup"],
+    });
+  }
+  if (data.subtasks && data.deadline) {
+    data.subtasks.forEach((st, index) => {
+      if (st.dueDate && st.dueDate > data.deadline) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Alt görev tarihi ana görev tarihinden sonra olamaz.",
+          path: ["subtasks", index, "dueDate"],
+        });
+      }
+    });
+  }
+});
 
 export type TaskFormValues = z.infer<typeof taskSchema>;

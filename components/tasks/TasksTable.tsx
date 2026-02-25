@@ -388,7 +388,7 @@ export function TasksTable({ data }: TasksTableProps) {
 
       {/* View Details Sheet */}
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-        <SheetContent className="sm:max-w-[600px] overflow-y-auto">
+        <SheetContent className="sm:max-w-5xl overflow-y-auto">
             <SheetHeader>
                 <SheetTitle>Görev Detayları</SheetTitle>
                 <SheetDescription>
@@ -426,7 +426,7 @@ export function TasksTable({ data }: TasksTableProps) {
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-5xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
                 <DialogTitle>Görevi Düzenle</DialogTitle>
                 <DialogDescription>
