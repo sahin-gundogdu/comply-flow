@@ -413,6 +413,8 @@ export function TasksTable({ data }: TasksTableProps) {
                             assignedGroup: selectedTask.assignedToGroupId?.toString() || "",
                             subtasks: (selectedTask.subTasks || []).map(st => ({
                                 title: st.title,
+                                description: st.description || "",
+                                dueDate: st.dueDate ? new Date(st.dueDate) : undefined,
                                 assignmentType: st.assignedToUserId ? "user" : (st.assignedToGroupId ? "group" : "none"),
                                 assignedUser: st.assignedToUserId?.toString() || "",
                                 assignedGroup: st.assignedToGroupId?.toString() || ""
@@ -453,6 +455,8 @@ export function TasksTable({ data }: TasksTableProps) {
                             assignedGroup: taskToEdit.assignedToGroupId?.toString() || "",
                             subtasks: (taskToEdit.subTasks || []).map(st => ({
                                 title: st.title,
+                                description: st.description || "",
+                                dueDate: st.dueDate ? new Date(st.dueDate) : undefined,
                                 assignmentType: st.assignedToUserId ? "user" : (st.assignedToGroupId ? "group" : "none"),
                                 assignedUser: st.assignedToUserId?.toString() || "",
                                 assignedGroup: st.assignedToGroupId?.toString() || ""
