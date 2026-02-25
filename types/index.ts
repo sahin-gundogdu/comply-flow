@@ -1,12 +1,48 @@
+export interface Role {
+  id: number;
+  name: string;
+}
+
+export interface CreateRoleDto {
+  name: string;
+}
+
+export interface UpdateRoleDto {
+  name?: string;
+}
+
 export interface User {
   id: number;
   fullName: string;
+  username: string;
   role: string;
+}
+
+export interface CreateUserDto {
+  fullName: string;
+  username: string;
+  password?: string;
+  role: string;
+}
+
+export interface UpdateUserDto {
+  fullName?: string;
+  username?: string;
+  password?: string;
+  role?: string;
 }
 
 export interface Group {
   id: number;
   name: string;
+}
+
+export interface CreateGroupDto {
+  name: string;
+}
+
+export interface UpdateGroupDto {
+  name?: string;
 }
 
 export interface SubTask {
@@ -47,4 +83,13 @@ export interface Task {
   assignedToGroupId?: number;
   assignedToGroup?: Group;
   subTasks?: SubTask[];
+}
+
+export interface DashboardSummaryDto {
+  totalTasks: number;
+  completedTasks: number;
+  inProgressTasks: number;
+  pendingTasks: number;
+  overdueTasks: number;
+  recentTasks: Task[];
 }

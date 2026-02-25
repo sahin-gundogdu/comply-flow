@@ -8,50 +8,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-const tasks = [
-  {
-    id: "TASK-1024",
-    title: "3. Çeyrek tedarikçi sözleşmesi incelemesi",
-    status: "İşlemde",
-    priority: "Yüksek",
-    assignee: "Alice Smith",
-    deadline: "2024-03-15",
-  },
-  {
-    id: "TASK-1025",
-    title: "KVKK uyumluluk politikası güncellemesi",
-    status: "Beklemede",
-    priority: "Orta",
-    assignee: "Hukuk Ekibi",
-    deadline: "2024-03-20",
-  },
-  {
-    id: "TASK-1026",
-    title: "Çalışan el kitabı revizyonu",
-    status: "Tamamlandı",
-    priority: "Düşük",
-    assignee: "Bob Jones",
-    deadline: "2024-02-28",
-  },
-  {
-    id: "TASK-1027",
-    title: "İç erişim kontrolleri denetimi",
-    status: "Gecikmiş",
-    priority: "Yüksek",
-    assignee: "Güvenlik Grubu",
-    deadline: "2024-03-01",
-  },
-  {
-    id: "TASK-1028",
-    title: "Yeni ortaklık için NDA taslağı",
-    status: "İşlemde",
-    priority: "Orta",
-    assignee: "Alice Smith",
-    deadline: "2024-03-18",
-  },
-];
+import { DashboardSummaryDto, Task } from "@/types";
 
-export function RecentTasksTable() {
+interface RecentTasksTableProps {
+  tasks: DashboardSummaryDto["recentTasks"] | undefined;
+}
+
+export function RecentTasksTable({ tasks = [] }: RecentTasksTableProps) {
   return (
     <div className="rounded-md border">
       <Table>
@@ -66,28 +29,33 @@ export function RecentTasksTable() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {tasks.map((task) => (
-            <TableRow key={task.id}>
-              <TableCell className="font-medium">{task.id}</TableCell>
-              <TableCell>{task.title}</TableCell>
-              <TableCell>
-                <Badge
-                  variant={
-                    task.status === "Tamamlandı"
-                      ? "default"
-                      : task.status === "Gecikmiş"
-                      ? "destructive"
-                      : "secondary"
-                  }
-                >
-                  {task.status}
-                </Badge>
-              </TableCell>
-              <TableCell>{task.priority}</TableCell>
-              <TableCell>{task.assignee}</TableCell>
-              <TableCell className="text-right">{task.deadline}</TableCell>
-            </TableRow>
-          ))}
+          {tasks.map((task: Task) => {
+            const assigneeName = task.assignedToUser?.fullName || task.assignedToGroup?.name || "Atanmadı";
+            const deadlineDate = task.dueDate ? new Date(task.dueDate).toLocaleDateString() : "-";
+
+            return (
+              <TableRow key={task.id}>
+                <TableCell className="font-medium">{task.id}</TableCell>
+                <TableCell>{task.title}</TableCell>
+                <TableCell>
+                  <Badge
+                    variant={
+                      task.status === "Tamamlandı"
+                        ? "default"
+                        : task.status === "Gecikmiş"
+                        ? "destructive"
+                        : task.status === "İşlemde" || task.status === "Devam Ediyor" ? "secondary" : "outline"
+                    }
+                  >
+                    {task.status}
+                  </Badge>
+                </TableCell>
+                <TableCell>{task.priority}</TableCell>
+                <TableCell>{assigneeName}</TableCell>
+                <TableCell className="text-right">{deadlineDate}</TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
     </div>

@@ -9,6 +9,10 @@ import {
   Settings,
   FileText,
   ShieldCheck,
+  Users,
+  Key,
+  Briefcase,
+  KanbanSquare,
 } from "lucide-react";
 
 const sidebarItems = [
@@ -26,6 +30,26 @@ const sidebarItems = [
     title: "Raporlar",
     href: "/reports",
     icon: FileText,
+  },
+  {
+    title: "Kullanıcılar",
+    href: "/users",
+    icon: Users,
+  },
+  {
+    title: "Roller",
+    href: "/roles",
+    icon: Key,
+  },
+  {
+    title: "Gruplar",
+    href: "/groups",
+    icon: Briefcase,
+  },
+  {
+    title: "Kanban Panom",
+    href: "/kanban",
+    icon: KanbanSquare,
   },
   {
     title: "Ayarlar",

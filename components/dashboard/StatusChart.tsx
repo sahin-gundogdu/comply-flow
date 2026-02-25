@@ -1,17 +1,19 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { DashboardSummaryDto } from "@/types";
 
 interface StatusChartProps {
   className?: string;
+  summary: DashboardSummaryDto | null;
 }
 
-export function StatusChart({ className }: StatusChartProps) {
-  // Data for the chart
+export function StatusChart({ className, summary }: StatusChartProps) {
+  // Data for the chart mapped from live endpoints
   const data = [
-    { name: "Tamamlandı", value: 35, color: "text-green-500", stroke: "#22c55e" },
-    { name: "İşlemde", value: 45, color: "text-blue-500", stroke: "#3b82f6" },
-    { name: "Beklemede", value: 10, color: "text-yellow-500", stroke: "#eab308" },
-    { name: "Gecikmiş", value: 10, color: "text-red-500", stroke: "#ef4444" },
+    { name: "Tamamlandı", value: summary?.completedTasks || 0, color: "text-green-500", stroke: "#22c55e" },
+    { name: "İşlemde", value: summary?.inProgressTasks || 0, color: "text-blue-500", stroke: "#3b82f6" },
+    { name: "Beklemede", value: summary?.pendingTasks || 0, color: "text-yellow-500", stroke: "#eab308" },
+    { name: "Gecikmiş", value: summary?.overdueTasks || 0, color: "text-red-500", stroke: "#ef4444" },
   ];
 
   // Calculate total for percentages

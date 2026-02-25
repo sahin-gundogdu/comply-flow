@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Bell, Search, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +15,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export function Navbar() {
+  const router = useRouter();
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    router.push('/login');
+  };
+
   return (
     <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-6 lg:h-[60px]">
       <div className="w-full flex-1">
@@ -45,7 +53,7 @@ export function Navbar() {
           <DropdownMenuItem>Profil</DropdownMenuItem>
           <DropdownMenuItem>Ayarlar</DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem>Çıkış Yap</DropdownMenuItem>
+          <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">Çıkış Yap</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </header>

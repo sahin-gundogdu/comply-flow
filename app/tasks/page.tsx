@@ -1,14 +1,37 @@
-import { Metadata } from "next";
+"use client";
+
+import { useEffect, useState } from "react";
+import { Loader2 } from "lucide-react";
 import { TasksTable } from "@/components/tasks/TasksTable";
 import { fetchTasks } from "@/lib/api";
+import { Task } from "@/types";
 
-export const metadata: Metadata = {
-  title: "Görevler | Hukuk & Uyumluluk",
-  description: "Tüm hukuk ve uyumluluk görevlerini yönetin.",
-};
+export default function TasksPage() {
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-export default async function TasksPage() {
-  const tasks = await fetchTasks();
+  useEffect(() => {
+    async function loadTasks() {
+      try {
+        const data = await fetchTasks();
+        setTasks(data);
+      } catch (error) {
+        console.error("Tasks fetch error:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadTasks();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-[50vh] flex-col items-center justify-center space-y-4">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-muted-foreground">Görevler Yükleniyor...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6">
