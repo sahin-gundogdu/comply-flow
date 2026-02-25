@@ -12,6 +12,7 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
+  getExpandedRowModel,
 } from "@tanstack/react-table";
 import {
   ArrowUpDown,
@@ -19,6 +20,7 @@ import {
   MoreHorizontal,
   Plus,
   Eye,
+  ChevronRight,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -117,6 +119,26 @@ export function TasksTable({ data }: TasksTableProps) {
   };
 
   const columns: ColumnDef<Task>[] = [
+    {
+      id: "expander",
+      header: () => null,
+      cell: ({ row }) => {
+        return row.getCanExpand() ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={row.getToggleExpandedHandler()}
+            className="p-0 h-6 w-6"
+          >
+            {row.getIsExpanded() ? (
+              <ChevronDown className="h-4 w-4" />
+            ) : (
+              <ChevronRight className="h-4 w-4" />
+            )}
+          </Button>
+        ) : null;
+      },
+    },
     {
       accessorKey: "id",
       header: "ID",
@@ -251,8 +273,10 @@ export function TasksTable({ data }: TasksTableProps) {
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    getExpandedRowModel: getExpandedRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
+    getRowCanExpand: (row) => (row.original.subTasks?.length ?? 0) > 0,
     state: {
       sorting,
       columnFilters,
@@ -334,19 +358,64 @@ export function TasksTable({ data }: TasksTableProps) {
           <TableBody>
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
+                <React.Fragment key={row.id}>
+                  <TableRow data-state={row.getIsSelected() && "selected"}>
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                  {row.getIsExpanded() && (
+                    <TableRow className="bg-slate-50/50 dark:bg-slate-900/50 hover:bg-slate-50/50 dark:hover:bg-slate-900/50">
+                      <TableCell colSpan={columns.length} className="p-0">
+                        <div className="p-4 pl-14 shadow-inner">
+                          <h4 className="font-semibold text-sm mb-2 text-muted-foreground">Alt Görevler</h4>
+                          <div className="rounded-md border bg-background">
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead>Başlık</TableHead>
+                                  <TableHead>Açıklama</TableHead>
+                                  <TableHead>Atanan</TableHead>
+                                  <TableHead>Son Tarih</TableHead>
+                                  <TableHead>Durum</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {row.original.subTasks?.map((subtask, index) => {
+                                  let stAssignee = "Atanmadı";
+                                  if (subtask.assignedToUserId) stAssignee = "Kullanıcı (ID: " + subtask.assignedToUserId + ")";
+                                  if (subtask.assignedToGroupId) stAssignee = "Grup (ID: " + subtask.assignedToGroupId + ")";
+                                  if (subtask.assignedToUser) stAssignee = subtask.assignedToUser.fullName;
+                                  if (subtask.assignedToGroup) stAssignee = subtask.assignedToGroup.name;
+
+                                  const stDate = subtask.dueDate ? new Date(subtask.dueDate).toLocaleDateString() : "-";
+                                  return (
+                                    <TableRow key={index} className="text-sm">
+                                      <TableCell>{subtask.title}</TableCell>
+                                      <TableCell className="text-muted-foreground">{subtask.description || "-"}</TableCell>
+                                      <TableCell>{stAssignee}</TableCell>
+                                      <TableCell>{stDate}</TableCell>
+                                      <TableCell>
+                                        <Badge variant={subtask.isCompleted ? "default" : "outline"}>
+                                          {subtask.isCompleted ? "Tamamlandı" : "Bekliyor"}
+                                        </Badge>
+                                      </TableCell>
+                                    </TableRow>
+                                  );
+                                })}
+                              </TableBody>
+                            </Table>
+                          </div>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </React.Fragment>
               ))
             ) : (
               <TableRow>
