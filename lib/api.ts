@@ -4,10 +4,13 @@ const BASE_URL = 'http://localhost:5000/api';
 
 function getAuthHeaders(includeContentType = false): HeadersInit {
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-    const headers: Record<string, string> = {};
-    if (includeContentType) headers['Content-Type'] = 'application/json';
-    if (token) headers['Authorization'] = `Bearer ${token}`;
-    return headers;
+    // Debug log to see if token exists in the browser console
+    console.log("Current Token in Storage:", token ? "Token Found" : "No Token"); 
+
+    return {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+    };
 }
 
 export async function fetchTasks(): Promise<Task[]> {
