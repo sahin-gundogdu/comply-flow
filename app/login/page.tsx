@@ -31,8 +31,14 @@ export default function LoginPage() {
         body: JSON.stringify({ username, password }),
       });
 
+      // 1. Check for wrong credentials specifically
+      if (response.status === 401 || response.status === 400) {
+          throw new Error("Kullanıcı adı veya şifre hatalı.");
+      }
+
+      // 2. Check for other server errors (500, etc.)
       if (!response.ok) {
-        throw new Error("Giriş başarısız. Lütfen bilgilerinizi kontrol edin.");
+        throw new Error("Sunucu ile iletişimde bir sorun oluştu.");
       }
 
       const data = await response.json();
@@ -49,9 +55,19 @@ export default function LoginPage() {
       
       router.push("/");
     } catch (error: any) {
+      let errorMessage = "Giriş yapılırken beklenmeyen bir hata oluştu.";
+
+      // 3. Catch true network disconnects (API is offline)
+      if (error?.message?.includes('Failed to fetch') || error?.message?.includes('NetworkError') || error instanceof TypeError) {
+          errorMessage = "Sunucuya ulaşılamıyor. Lütfen bağlantınızı kontrol edip tekrar deneyin.";
+      } else if (error.message) {
+          // 4. Catch the specific messages we threw above
+          errorMessage = error.message;
+      }
+
       toast({
         title: "Hata",
-        description: error.message || "Bir şeyler ters gitti.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

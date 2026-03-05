@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Toaster } from "@/components/ui/toaster";
+import { AuthGuard } from "@/components/auth/AuthGuard";
 import { cn } from "@/lib/utils";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -20,9 +21,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={cn(inter.className, "min-h-screen bg-background font-sans antialiased")}>
-        <AppLayout>
-          {children}
-        </AppLayout>
+        <AuthGuard>
+          <AppLayout>
+            {children}
+          </AppLayout>
+        </AuthGuard>
         <Toaster />
       </body>
     </html>

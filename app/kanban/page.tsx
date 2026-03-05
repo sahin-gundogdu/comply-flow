@@ -2,13 +2,20 @@
 
 import { useEffect, useState } from "react";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
-import { fetchMyTasks, updateTaskStatus } from "@/lib/api";
-import { Task } from "@/types";
+import { fetchMyTasks, fetchTasksByUserId, fetchUsers, updateTaskStatus } from "@/lib/api";
+import { Task, User } from "@/types";
 import { Loader2, Calendar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type ColumnsType = {
   "Beklemede": Task[];
@@ -41,12 +48,29 @@ export default function KanbanPage() {
     "Gecikmiş": [],
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [users, setUsers] = useState<User[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState<string>("me");
   const { toast } = useToast();
 
   useEffect(() => {
-    async function loadTasks() {
+    async function loadUsers() {
       try {
-        const tasks = await fetchMyTasks();
+        const fetchedUsers = await fetchUsers();
+        setUsers(fetchedUsers);
+      } catch (error) {
+        console.error("Failed to fetch users:", error);
+      }
+    }
+    loadUsers();
+  }, []);
+
+  useEffect(() => {
+    async function loadTasks() {
+      setIsLoading(true);
+      try {
+        const tasks = selectedUserId === "me" 
+          ? await fetchMyTasks()
+          : await fetchTasksByUserId(selectedUserId);
         
         const newColumns: ColumnsType = {
           "Beklemede": [],
@@ -65,14 +89,14 @@ export default function KanbanPage() {
 
         setColumns(newColumns);
       } catch (error) {
-        console.error("Failed to fetch my tasks for kanban:", error);
+        console.error("Failed to fetch tasks for kanban:", error);
       } finally {
         setIsLoading(false);
       }
     }
     
     loadTasks();
-  }, []);
+  }, [selectedUserId]);
 
   const onDragEnd = async (result: DropResult) => {
     if (!result.destination) return;
@@ -140,6 +164,24 @@ export default function KanbanPage() {
     <div className="flex flex-col gap-6 h-[calc(100vh-8rem)]">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">Kanban Panom</h1>
+
+        {/* User Filter Dropdown */}
+        <div className="flex items-center gap-3">
+          <span className="text-sm font-medium text-muted-foreground">Çalışan Filtrasyonu:</span>
+          <Select value={selectedUserId} onValueChange={setSelectedUserId}>
+            <SelectTrigger className="w-[220px]">
+              <SelectValue placeholder="Görevleri Göster" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="me">Benim Görevlerim</SelectItem>
+              {users.map(user => (
+                <SelectItem key={user.id} value={user.id.toString()}>
+                  {user.fullName}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
       
       <div className="flex-1 overflow-x-auto overflow-y-hidden">
