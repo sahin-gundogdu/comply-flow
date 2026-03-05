@@ -10,7 +10,7 @@ import { ShieldCheck, ArrowLeft, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
-const BASE_URL = 'http://localhost:5000/api';
+const BASE_URL = 'https://localhost:5001/api';
 
 export default function LoginPage() {
   const [isForgotPass, setIsForgotPass] = useState(false);

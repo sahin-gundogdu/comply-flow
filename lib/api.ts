@@ -1,11 +1,11 @@
 import { Task, User, Group, DashboardSummaryDto, Role } from "@/types";
 
-const BASE_URL = 'http://localhost:5000/api';
+const BASE_URL = 'https://localhost:5001/api';
 
 function getAuthHeaders(includeContentType = false): HeadersInit {
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
     // Debug log to see if token exists in the browser console
-    console.log("Current Token in Storage:", token ? "Token Found" : "No Token"); 
+    console.log("Current Token in Storage:", token ? "Token Found" : "No Token");
 
     return {
         'Content-Type': 'application/json',
@@ -26,11 +26,11 @@ async function apiFetch(endpoint: string, options: RequestInit = {}) {
             }
             throw new Error("Unauthorized");
         }
-        
+
         if (!response.ok) {
             throw new Error(`API Error: ${response.statusText}`);
         }
-        
+
         return response;
     } catch (error) {
         // Catch Network Errors (API Down / Server Offline)
@@ -248,7 +248,7 @@ export async function updateTaskStatus(id: number, status: string): Promise<Task
     });
 
     if (response.status === 204) {
-        return { id, status } as Task; 
+        return { id, status } as Task;
     }
 
     try {
